@@ -4,10 +4,9 @@ This is sample app for capture with `.appleLog` color mode.
 
 ## How
 
-1. Define `AVCaptureSession`.
-2. Set `automaticallyConfiguresCaptureDeviceForWideColor` to `false`.
-4. Select `.appleLog` containing `format` to `device.activeFormat` from `device`.
-4. Set `activeColorSpace = .appleLog` for `AVCaptureDevice`.
+1. Set `automaticallyConfiguresCaptureDeviceForWideColor` of AVCaptureSession to `false` (this might be the most important part)
+2. Search for a format in `formats` of `AVCaptureDevice` that contains `.appleLog` in `supportedColorSpaces` and set it as `activeFormat`
+3. Set `activeColorSpace = .appleLog` on `AVCaptureDevice`
 
 ```swift
 private func isAppleLogAvailable(for device: AVCaptureDevice) -> Bool {
