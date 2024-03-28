@@ -5,17 +5,16 @@
 //  Created by Kazuya Ueoka on 2024/03/28.
 //
 
+import ComposableArchitecture
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
-        }
-        .padding()
+        CameraView(store: Store(initialState: CameraFeature.State(), reducer: {
+            CameraFeature()
+                ._printChanges()
+        }))
+            .ignoresSafeArea()
     }
 }
 
