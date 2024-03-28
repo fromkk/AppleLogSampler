@@ -87,26 +87,27 @@ public struct CameraFeature {
                 return .none
             }
         }
+        .ifLet(\.$alert, action: \.alert)
     }
 }
 
 @MainActor
-public class ALCameraView: UIView {
-    private lazy var logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "", category: "ALCameraView")
+public class CameraViewController: UIViewController {
+    private lazy var logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "", category: "CameraViewController")
 
     let store: StoreOf<CameraFeature>
 
     public init(store: StoreOf<CameraFeature>) {
         self.store = store
-        super.init(frame: .null)
-        setUp()
+        super.init(nibName: nil, bundle: nil)
     }
 
     public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    private lazy var setUp: () -> Void = {
+    public override func viewDidLoad() {
+        super.viewDidLoad()
         addPreviewLayer()
         addStackView()
         observe { [weak self] in
@@ -124,13 +125,21 @@ public class ALCameraView: UIView {
             }
             self.updateLabelAndButton()
         }
-        store.send(.view(.onAppear))
-        return {}
-    }()
 
-    public override func layoutSubviews() {
-        super.layoutSubviews()
-        previewLayer.frame = bounds
+        observe { [weak self] in
+            guard let self, let alertState = self.store.alert else { return }
+            let alertViewController = UIAlertController(state: alertState, send: { [weak self] action in
+                guard let self, let action else { return }
+                self.store.send(.alert(.presented(action)))
+            })
+            self.show(alertViewController, sender: nil)
+        }
+        store.send(.view(.onAppear))
+    }
+
+    public override func viewWillLayoutSubviews() {
+        super.viewWillLayoutSubviews()
+        previewLayer.frame = view.bounds
     }
 
     lazy var captureSession: AVCaptureSession = .init()
@@ -250,7 +259,7 @@ public class ALCameraView: UIView {
     }()
 
     private func addPreviewLayer() {
-        layer.addSublayer(previewLayer)
+        view.layer.addSublayer(previewLayer)
     }
 
     lazy var stackView: UIStackView = {
@@ -268,10 +277,10 @@ public class ALCameraView: UIView {
 
     private func addStackView() {
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(stackView)
+        view.addSubview(stackView)
         NSLayoutConstraint.activate([
-            stackView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            bottomAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 32),
+            stackView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            view.bottomAnchor.constraint(equalTo: stackView.bottomAnchor, constant: 32),
         ])
     }
 
@@ -321,17 +330,16 @@ public class ALCameraView: UIView {
     }
 }
 
-struct CameraView: UIViewRepresentable {
+struct CameraView: UIViewControllerRepresentable {
     let store: StoreOf<CameraFeature>
 
-    typealias UIViewType = ALCameraView
+    typealias UIViewControllerType = CameraViewController
 
-    func makeUIView(context: Context) -> ALCameraView {
-        let view = ALCameraView(store: store)
-        return view
+    func makeUIViewController(context: Context) -> CameraViewController {
+        CameraViewController(store: store)
     }
 
-    func updateUIView(_ uiView: ALCameraView, context: Context) {
+    func updateUIViewController(_ uiViewController: CameraViewController, context: Context) {
         // nop
     }
 }
