@@ -194,12 +194,8 @@ public class CameraViewController: UIViewController {
         /// set up for .appleLog
         if let format = device.formats.first(where: {
             $0.supportedColorSpaces.contains(.appleLog)
-            && $0.formatDescription.mediaSubType.rawValue == kCVPixelFormatType_422YpCbCr10BiPlanarVideoRange
         }) {
             device.activeFormat = format
-        }
-
-        if device.activeFormat.supportedColorSpaces.contains(.appleLog) {
             device.activeColorSpace = .appleLog
         }
 
